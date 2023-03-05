@@ -10,7 +10,7 @@ func main() {
 
 	srv := tcpkit.NewServer()
 
-	srv.ServeTCPFunc(h.Enroll())
+	srv.HandleTCPFunc(h.Enroll())
 }
 
 type handler struct{}
