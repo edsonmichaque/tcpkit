@@ -8,14 +8,14 @@ import (
 	"net"
 )
 
-type TCPHandlerFunc func(req *Request) (*Response, error)
+type TCPHandlerFunc func(resp *Response, req *Request)
 
-func (h TCPHandlerFunc) HandleTCP(r *Request) (*Response, error) {
-	return h(r)
+func (h TCPHandlerFunc) HandleTCP(resp *Response, req *Request) {
+	h(resp, req)
 }
 
 type TCPHandler interface {
-	HandleTCP(r *Request) (*Response, error)
+	HandleTCP(rep *Response, r *Request)
 }
 
 type Decoder interface {
@@ -61,22 +61,15 @@ func (m *Server) ListenServe() error {
 		log.Println("new request")
 
 		go func(con net.Conn) {
-			for {
-				resp, err := m.Handler.HandleTCP(&Request{
-					body: con,
-				})
+			defer con.Close()
 
-				if err != nil {
-					con.Close()
-					break
-				}
-
-				io.Copy(con, resp.GetBody())
-				if resp.Close {
-					con.Close()
-					break
-				}
+			resp := Response{
+				writer: con,
 			}
+
+			m.Handler.HandleTCP(&resp, &Request{
+				body: con,
+			})
 		}(con)
 	}
 }
@@ -91,10 +84,9 @@ func (r Request) GetBody() io.Reader {
 }
 
 type Response struct {
-	Close bool
-	Body  io.Reader
+	writer io.Writer
 }
 
-func (r Response) GetBody() io.Reader {
-	return r.Body
+func (resp Response) Write(data []byte) (int, error) {
+	return resp.writer.Write(data)
 }

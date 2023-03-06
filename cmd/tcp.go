@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"log"
 	"strings"
 	"time"
@@ -19,23 +20,37 @@ func main() {
 
 type enrollmentHandler struct{}
 
-func (h enrollmentHandler) Enroll(req *tcpkit.Request) (*tcpkit.Response, error) {
+func (h enrollmentHandler) Enroll(resp *tcpkit.Response, req *tcpkit.Request) {
 	buf := make([]byte, 1024)
 
-	_, err := req.GetBody().Read(buf)
-	if err != nil {
-		return nil, err
+	for i := 0; i < 25; i++ {
+		_, err := req.GetBody().Read(buf)
+		if err != nil {
+			return
+		}
+
+		log.Println(string(buf))
+
+		var reply string
+
+		in := bytes.Trim(buf, "\n")
+		if strings.HasPrefix(string(in), "PING") {
+			reply = "PONG"
+		}
+
+		if strings.HasPrefix(string(in), "PONG") {
+			reply = "PING"
+		}
+
+		_, err = resp.Write([]byte(reply + "\n"))
+		if err != nil {
+			return
+		}
 	}
-
-	log.Println(string(buf))
-
-	return &tcpkit.Response{
-		Body: strings.NewReader("PONG\n"),
-	}, nil
 }
 
 func Logger(next tcpkit.TCPHandler) tcpkit.TCPHandler {
-	return tcpkit.TCPHandlerFunc(func(req *tcpkit.Request) (*tcpkit.Response, error) {
+	return tcpkit.TCPHandlerFunc(func(resp *tcpkit.Response, req *tcpkit.Request) {
 		date := time.Now()
 
 		defer func() {
@@ -43,11 +58,6 @@ func Logger(next tcpkit.TCPHandler) tcpkit.TCPHandler {
 			log.Println("Duration", dur)
 		}()
 
-		resp, err := next.HandleTCP(req)
-		if err != nil {
-			return nil, err
-		}
-
-		return resp, nil
+		next.HandleTCP(resp, req)
 	})
 }
