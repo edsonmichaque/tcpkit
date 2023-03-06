@@ -13,7 +13,7 @@ func main() {
 
 	srv := tcpkit.NewServer(12345)
 
-	srv.HandleTCPFunc(Logger(tcpkit.TCPServerFunc(h.Enroll)))
+	srv.HandleTCPFunc(Logger(tcpkit.TCPHandlerFunc(h.Enroll)))
 	log.Fatal(srv.ListenServe())
 }
 
@@ -34,8 +34,8 @@ func (h handler) Enroll(req *tcpkit.Request) (*tcpkit.Response, error) {
 	}, nil
 }
 
-func Logger(next tcpkit.TCPServer) tcpkit.TCPServer {
-	return tcpkit.TCPServerFunc(func(req *tcpkit.Request) (*tcpkit.Response, error) {
+func Logger(next tcpkit.TCPHandler) tcpkit.TCPHandler {
+	return tcpkit.TCPHandlerFunc(func(req *tcpkit.Request) (*tcpkit.Response, error) {
 		date := time.Now()
 
 		defer func() {
@@ -43,7 +43,7 @@ func Logger(next tcpkit.TCPServer) tcpkit.TCPServer {
 			log.Println("Duration", dur)
 		}()
 
-		resp, err := next.ServeTCP(req)
+		resp, err := next.HandleTCP(req)
 		if err != nil {
 			return nil, err
 		}

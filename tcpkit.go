@@ -8,14 +8,14 @@ import (
 	"net"
 )
 
-type TCPServerFunc func(req *Request) (*Response, error)
+type TCPHandlerFunc func(req *Request) (*Response, error)
 
-func (h TCPServerFunc) ServeTCP(r *Request) (*Response, error) {
+func (h TCPHandlerFunc) HandleTCP(r *Request) (*Response, error) {
 	return h(r)
 }
 
-type TCPServer interface {
-	ServeTCP(r *Request) (*Response, error)
+type TCPHandler interface {
+	HandleTCP(r *Request) (*Response, error)
 }
 
 type Decoder interface {
@@ -34,10 +34,10 @@ func NewServer(port int) *Server {
 
 type Server struct {
 	port    int
-	Handler TCPServer
+	Handler TCPHandler
 }
 
-func (m *Server) HandleTCPFunc(t TCPServer) {
+func (m *Server) HandleTCPFunc(t TCPHandler) {
 	m.Handler = t
 }
 
@@ -58,7 +58,7 @@ func (m *Server) ListenServe() error {
 
 		go func(con net.Conn) {
 			for {
-				resp, err := m.Handler.ServeTCP(&Request{
+				resp, err := m.Handler.HandleTCP(&Request{
 					body: con,
 				})
 
