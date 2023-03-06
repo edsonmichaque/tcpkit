@@ -13,7 +13,7 @@ func main() {
 
 	srv := tcpkit.NewServer(12345)
 
-	srv.HandleTCPFunc(Logger(tcpkit.TCPHandlerFunc(h.Enroll)))
+	srv.HandleTCP(Logger(tcpkit.TCPHandlerFunc(h.Enroll)))
 	log.Fatal(srv.ListenServe())
 }
 

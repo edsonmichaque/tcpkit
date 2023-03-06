@@ -37,7 +37,11 @@ type Server struct {
 	Handler TCPHandler
 }
 
-func (m *Server) HandleTCPFunc(t TCPHandler) {
+func (m *Server) HandleTCPFunc(t TCPHandlerFunc) {
+	m.Handler = t
+}
+
+func (m *Server) HandleTCP(t TCPHandler) {
 	m.Handler = t
 }
 
