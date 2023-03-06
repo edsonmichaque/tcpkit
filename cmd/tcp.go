@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	h := handler{}
+	h := enrollmentHandler{}
 
 	srv := tcpkit.NewServer(12345)
 
@@ -17,9 +17,9 @@ func main() {
 	log.Fatal(srv.ListenServe())
 }
 
-type handler struct{}
+type enrollmentHandler struct{}
 
-func (h handler) Enroll(req *tcpkit.Request) (*tcpkit.Response, error) {
+func (h enrollmentHandler) Enroll(req *tcpkit.Request) (*tcpkit.Response, error) {
 	buf := make([]byte, 1024)
 
 	_, err := req.GetBody().Read(buf)
